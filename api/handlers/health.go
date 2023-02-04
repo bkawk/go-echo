@@ -1,32 +1,24 @@
 package handlers
 
 import (
+	"context"
+	"fmt"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
-// RegisterEndpoint handles user registration requests
+// HealthGet handles health check requests
 func HealthGet(c echo.Context) error {
-	// bind the incoming request body to a User struct
-	u := new(User)
-	if err := c.Bind(u); err != nil {
-		return err
+	db := c.Get("db").(*mongo.Client)
+	newUser := User{Username: "bkawk", Password: "secret"}
+	result, err := db.Database("test").Collection("test").InsertOne(context.TODO(), newUser)
+	if err != nil {
+		panic(err)
 	}
-
-	// validate user input
-	if u.Username == "" || u.Password == "" || u.Email == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "invalid request body",
-		})
-	}
-
-	// add the new user to the database
-	// (this is a dummy implementation and would be replaced in a real application)
-	// ...
-
-	// return a success response
+	fmt.Println(result)
 	return c.JSON(http.StatusOK, map[string]string{
-		"message": "user registered successfully",
+		"status": "OK",
 	})
 }

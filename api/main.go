@@ -1,7 +1,10 @@
 package main
 
 import (
+	"bkawk/go-echo/api/database"
 	"bkawk/go-echo/api/handlers"
+	"context"
+	"fmt"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -14,8 +17,22 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
+	client, err := database.Connect()
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer client.Disconnect(context.TODO())
 
 	e := echo.New()
+
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("db", client)
+			return next(c)
+		}
+	})
+
 	e.GET("/health", handlers.HealthGet)                            // Health Check
 	e.POST("/register", handlers.RegisterPost)                      // Register a new user
 	e.POST("/login", handlers.LoginPost)                            // Login with a username and password
