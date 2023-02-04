@@ -4,7 +4,6 @@ import (
 	"bkawk/go-echo/api/database"
 	"bkawk/go-echo/api/handlers"
 	"context"
-	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -17,41 +16,8 @@ import (
 
 func main() {
 
-	// Load .env file
-	err := godotenv.Load()
-	if err != nil {
-		panic(err)
-	}
-
-	// Connect to MongoDB Atlas
-	client, err := database.Connect()
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-	defer client.Disconnect(context.TODO())
-
 	// Initialize Echo
 	e := echo.New()
-
-	// Inject MongoDB client into Echo using middleware
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			c.Set("db", client.Database(os.Getenv("MONGO_DB")))
-			return next(c)
-		}
-	})
-
-	// Limit the number of requests to 1 requests per second with a burst of 20 requests
-	limiter := ratelimit.NewBucketWithQuantum(1, 20, 1)
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			if limiter.TakeAvailable(1) == 0 {
-				return c.String(http.StatusTooManyRequests, "Rate limit exceeded")
-			}
-			return next(c)
-		}
-	})
 
 	// Zap logger
 	// logger.Debug("debug log")
@@ -87,6 +53,42 @@ func main() {
 			}
 
 			return nil
+		}
+	})
+
+	// Load .env file
+	err := godotenv.Load()
+	if err != nil {
+		logger.Error("Environment variables not loaded")
+		panic(err)
+	}
+
+	// Connect to MongoDB Atlas
+	client, err := database.Connect()
+	if err != nil {
+		logger.Error("MongoDB connection failed")
+		return
+	}
+	defer client.Disconnect(context.TODO())
+
+	// Limit the number of requests to 1 requests per second with a burst of 20 requests
+	limiter := ratelimit.NewBucketWithQuantum(1, 20, 1)
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if limiter.TakeAvailable(1) == 0 {
+				msg := "Rate limit exceeded"
+				logger.Warn(msg)
+				return c.String(http.StatusTooManyRequests, msg)
+			}
+			return next(c)
+		}
+	})
+
+	// Inject MongoDB client into Echo using middleware
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("db", client.Database(os.Getenv("MONGO_DB")))
+			return next(c)
 		}
 	})
 
