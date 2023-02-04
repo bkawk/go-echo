@@ -7,10 +7,12 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/juju/ratelimit"
 	"github.com/labstack/echo/v4"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -48,6 +50,43 @@ func main() {
 				return c.String(http.StatusTooManyRequests, "Rate limit exceeded")
 			}
 			return next(c)
+		}
+	})
+
+	// Zap logger
+	// logger.Debug("debug log")
+	// logger.Info("info log")
+	// logger.Warn("warn log")
+	// logger.Error("error log")
+	logger, _ := zap.NewProduction()
+	defer logger.Sync()
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			req := c.Request()
+			res := c.Response()
+			start := time.Now()
+			if err := next(c); err != nil {
+				c.Error(err)
+			}
+			stop := time.Now()
+			latency := stop.Sub(start)
+
+			fields := []zap.Field{
+				zap.String("method", req.Method),
+				zap.String("uri", req.RequestURI),
+				zap.Int("status", res.Status),
+				zap.Duration("latency", latency),
+				zap.String("remote_ip", c.RealIP()),
+				zap.String("user_agent", req.UserAgent()),
+			}
+
+			if res.Status >= http.StatusBadRequest {
+				logger.Warn("Request failed", fields...)
+			} else {
+				logger.Info("Request succeeded", fields...)
+			}
+
+			return nil
 		}
 	})
 
