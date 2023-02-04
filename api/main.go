@@ -95,11 +95,14 @@ func main() {
 
 	// Configure CORS middleware
 	config := middleware.CORSConfig{
+		// AllowOrigins: []string{"http://www.mydomain.com"},
 		AllowOrigins: []string{"*"},
 		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
 	}
-
 	e.Use(middleware.CORSWithConfig(config))
+
+	// Limit Body Size
+	e.Use(middleware.BodyLimit("100K"))
 
 	// Routes
 	e.GET("/health", handlers.HealthGet)                            // Health Check
