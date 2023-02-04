@@ -107,6 +107,7 @@ func main() {
 	// Routes
 	e.GET("/health", handlers.HealthGet)                            // Health Check
 	e.POST("/register", handlers.RegisterPost)                      // Register a new user
+	e.GET("/check-username", handlers.CheckUsernameGet)             // Check if a username is available
 	e.POST("/login", handlers.LoginPost)                            // Login with a username and password
 	e.POST("/refresh", handlers.RefreshPost)                        // Refresh the access token using a refresh token
 	e.DELETE("/refresh", handlers.RefreshDelete)                    // Invalidate the current refresh token, effectively logging the user out
