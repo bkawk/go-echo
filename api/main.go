@@ -13,10 +13,13 @@ import (
 
 func main() {
 
+	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
 		panic(err)
 	}
+
+	// Connect to MongoDB Atlas
 	client, err := database.Connect()
 	if err != nil {
 		fmt.Println(err)
@@ -24,8 +27,10 @@ func main() {
 	}
 	defer client.Disconnect(context.TODO())
 
+	// Initialize Echo
 	e := echo.New()
 
+	// Inject MongoDB client into Echo using middleware
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			c.Set("db", client)
@@ -33,6 +38,7 @@ func main() {
 		}
 	})
 
+	// Routes
 	e.GET("/health", handlers.HealthGet)                            // Health Check
 	e.POST("/register", handlers.RegisterPost)                      // Register a new user
 	e.POST("/login", handlers.LoginPost)                            // Login with a username and password
@@ -44,5 +50,7 @@ func main() {
 	e.GET("/profile/:username", handlers.ProfileGet)                // Retrieve the profile information of a specific user,
 	e.GET("/verify-email", handlers.VerifyEmailGet)                 // Verify the email address of a user
 	e.POST("/resend-verification", handlers.ResendVerificationPost) // Resend the verification email to a user
+
+	// Start server
 	e.Logger.Fatal(e.Start(os.Getenv("PORT")))
 }
