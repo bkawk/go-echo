@@ -3,13 +3,15 @@ package handlers
 import (
 	"net/http"
 
+	"bkawk/go-echo/api/models"
+
 	"github.com/labstack/echo/v4"
 )
 
 // RegisterEndpoint handles user registration requests
 func RefreshPost(c echo.Context) error {
 	// bind the incoming request body to a User struct
-	u := new(User)
+	u := new(models.User)
 	if err := c.Bind(u); err != nil {
 		return err
 	}
@@ -34,7 +36,7 @@ func RefreshPost(c echo.Context) error {
 // RegisterEndpoint handles user registration requests
 func RefreshDelete(c echo.Context) error {
 	// bind the incoming request body to a User struct
-	u := new(User)
+	u := new(models.User)
 	if err := c.Bind(u); err != nil {
 		return err
 	}

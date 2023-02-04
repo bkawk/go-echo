@@ -29,6 +29,7 @@ func Connect() (*mongo.Client, error) {
 	if err != nil {
 		log.Fatal(err)
 	}
+
 	fmt.Println("Connected to MongoDB Atlas")
 	return client, nil
 }
