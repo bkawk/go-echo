@@ -5,9 +5,11 @@ import (
 	"bkawk/go-echo/api/handlers"
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 
 	"github.com/joho/godotenv"
+	"github.com/juju/ratelimit"
 	"github.com/labstack/echo/v4"
 )
 
@@ -34,6 +36,17 @@ func main() {
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			c.Set("db", client.Database(os.Getenv("MONGO_DB")))
+			return next(c)
+		}
+	})
+
+	// Limit the number of requests to 1 requests per second with a burst of 20 requests
+	limiter := ratelimit.NewBucketWithQuantum(1, 20, 1)
+	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			if limiter.TakeAvailable(1) == 0 {
+				return c.String(http.StatusTooManyRequests, "Rate limit exceeded")
+			}
 			return next(c)
 		}
 	})

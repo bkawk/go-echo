@@ -4,6 +4,7 @@ go 1.19
 
 require (
 	github.com/joho/godotenv v1.5.0
+	github.com/juju/ratelimit v1.0.2
 	github.com/labstack/echo/v4 v4.10.0
 	go.mongodb.org/mongo-driver v1.11.1
 )
