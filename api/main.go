@@ -11,6 +11,7 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/juju/ratelimit"
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"go.uber.org/zap"
 )
 
@@ -91,6 +92,14 @@ func main() {
 			return next(c)
 		}
 	})
+
+	// Configure CORS middleware
+	config := middleware.CORSConfig{
+		AllowOrigins: []string{"*"},
+		AllowMethods: []string{http.MethodGet, http.MethodPost, http.MethodPut, http.MethodDelete},
+	}
+
+	e.Use(middleware.CORSWithConfig(config))
 
 	// Routes
 	e.GET("/health", handlers.HealthGet)                            // Health Check
