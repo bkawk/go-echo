@@ -7,14 +7,13 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
-func GenerateJWT(username, email string) (string, error) {
+func GenerateJWT(id string) (string, error) {
 	// Create a new JWT token
 	token := jwt.New(jwt.SigningMethodHS256)
 
 	// Set claims
 	claims := token.Claims.(jwt.MapClaims)
-	claims["username"] = username
-	claims["email"] = email
+	claims["id"] = id
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
 	// Generate encoded token and send it as response.
