@@ -33,7 +33,7 @@ func main() {
 	// Inject MongoDB client into Echo using middleware
 	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
-			c.Set("db", client)
+			c.Set("db", client.Database(os.Getenv("MONGO_DB")))
 			return next(c)
 		}
 	})

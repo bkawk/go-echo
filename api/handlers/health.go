@@ -9,11 +9,16 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type UserStr struct {
+	Username string
+	Password string `bson:"password,omitempty"`
+}
+
 // HealthGet handles health check requests
 func HealthGet(c echo.Context) error {
-	db := c.Get("db").(*mongo.Client)
-	newUser := User{Username: "bkawk", Password: "secret"}
-	result, err := db.Database("test").Collection("test").InsertOne(context.TODO(), newUser)
+	db := c.Get("db").(*mongo.Database)
+	newUser := UserStr{Username: "bkawk", Password: "secret"}
+	result, err := db.Collection("test").InsertOne(context.TODO(), newUser)
 	if err != nil {
 		panic(err)
 	}
