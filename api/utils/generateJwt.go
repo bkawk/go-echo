@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"errors"
 	"os"
 	"time"
 
@@ -8,6 +9,14 @@ import (
 )
 
 func GenerateJWT(id string) (string, error) {
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		return "", errors.New("JWT_SECRET environment variable is not set")
+	}
+	if id == "" {
+		return "", errors.New("ID cannot be empty")
+	}
+
 	// Create a new JWT token
 	token := jwt.New(jwt.SigningMethodHS256)
 
@@ -17,7 +26,7 @@ func GenerateJWT(id string) (string, error) {
 	claims["exp"] = time.Now().Add(time.Hour * 72).Unix()
 
 	// Generate encoded token and send it as response.
-	t, err := token.SignedString([]byte(os.Getenv("JWT_SECRET")))
+	t, err := token.SignedString([]byte(secret))
 	if err != nil {
 		return "", err
 	}

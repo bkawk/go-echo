@@ -14,13 +14,18 @@ const (
 
 // GenerateRefreshToken generates a new refresh token
 func GenerateRefreshToken() (string, error) {
-	b := make([]byte, RefreshTokenLength)
+	b := make([]byte, (RefreshTokenLength*3)/4)
 	_, err := rand.Read(b)
 	if err != nil {
 		return "", err
 	}
 
-	return base64.URLEncoding.EncodeToString(b), nil
+	encoded := base64.URLEncoding.EncodeToString(b)
+	if len(encoded) > RefreshTokenLength {
+		encoded = encoded[:RefreshTokenLength]
+	}
+
+	return encoded, nil
 }
 
 // ValidateRefreshToken checks if a refresh token is valid and has not expired
