@@ -1,9 +1,9 @@
 package utils
 
 import (
-	"encoding/json"
 	"errors"
 	"os"
+	"regexp"
 
 	"github.com/golang-jwt/jwt"
 )
@@ -18,6 +18,16 @@ func VerifyJwt(jwtToken string) (string, error) {
 		return "", errors.New("jwtToken cannot be empty")
 	}
 
+	// Validate the format of the JWT using a regular expression
+	jwtRegex := "^[A-Za-z0-9-_=]+\\.[A-Za-z0-9-_=]+\\.?[A-Za-z0-9-_.+/=]*$"
+	match, err := regexp.MatchString(jwtRegex, jwtToken)
+	if err != nil {
+		return "", err
+	}
+	if !match {
+		return "", errors.New("jwtToken does not match the expected format")
+	}
+
 	// Decode and verify the token
 	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -29,18 +39,23 @@ func VerifyJwt(jwtToken string) (string, error) {
 		return "", err
 	}
 
+	// Verify that the token was correctly signed and not tampered with
+	if !token.Valid {
+		return "", errors.New("invalid token")
+	}
+
 	// Extract the claims from the token
 	claims, ok := token.Claims.(jwt.MapClaims)
 	if !ok || !token.Valid {
 		return "", errors.New("invalid token")
 	}
 
-	// Convert the claims to a JSON string
-	claimsJson, err := json.Marshal(claims)
-	if err != nil {
-		return "", err
+	// Check that the claims contain an ID
+	id, ok := claims["id"].(string)
+	if !ok {
+		return "", errors.New("claims do not contain an ID")
 	}
 
-	// Return the claims
-	return string(claimsJson), nil
+	// Return the ID
+	return id, nil
 }
