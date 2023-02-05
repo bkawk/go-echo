@@ -1,29 +1,57 @@
 package email
 
 import (
+	"fmt"
 	"net/smtp"
-
-	"bkawk/go-echo/api/models"
+	"os"
+	"strconv"
 )
 
-type EmailSender interface {
-	Send(from, password, server string, auth smtp.Auth, to []string, msg []byte) error
-}
+func SendWelcomeEmail(to, verificationLink string) error {
 
-type SMTPSender struct{}
+	var (
+		smtpServer = os.Getenv("SMTP_SERVER")
+		smtpPort   = os.Getenv("SMTP_PORT")
+		username   = os.Getenv("EMAIL_FROM")
+		password   = os.Getenv("SMTP_PASSWORD")
+		from       = os.Getenv("EMAIL_FROM")
+	)
 
-func (s SMTPSender) Send(from, password, server string, auth smtp.Auth, to []string, msg []byte) error {
-	return smtp.SendMail(server, auth, from, to, msg)
-}
+	if smtpServer == "" || smtpPort == "" || username == "" || password == "" || from == "" {
+		return fmt.Errorf("environment variable not set: SMTP_SERVER, SMTP_PORT, EMAIL_FROM, or SMTP_PASSWORD")
+	}
 
-func WelcomeEmail(u *models.User, from, password, server string, sender EmailSender) error {
-	to := u.Email
-	message := `Subject: Welcome to Our System
-	<p>Dear ` + u.Username + `,</p>
-	<p>Welcome to our system!</p>
-	<p>Best regards,</p>
-	<p>Support Team</p>`
+	port, err := strconv.Atoi(smtpPort)
+	if err != nil {
+		return fmt.Errorf("failed to convert smtpPort to int: %v", err)
+	}
 
-	auth := smtp.PlainAuth("", from, password, server)
-	return sender.Send(from, password, server, auth, []string{to}, []byte(message))
+	body := fmt.Sprintf(`
+		<html>
+			<body>
+				<p>
+					Welcome! Thank you for signing up.
+				</p>
+				<p>
+					Please click the following link to verify your account:
+					<br />
+					<a href="%s">%s</a>
+				</p>
+				<p>
+					<button style="background-color: #4CAF50; color: white; padding: 14px 20px; margin: 8px 0; border: none; cursor: pointer; width: 100%%;">Verify</button>
+				</p>
+				<p>
+					Best regards,
+					<br />
+					The Team
+				</p>
+			</body>
+		</html>
+	`, verificationLink, verificationLink)
+	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: Welcome\r\nContent-Type: text/html\r\n\r\n%s", from, to, body))
+	auth := smtp.PlainAuth("", username, password, smtpServer)
+	if err := smtp.SendMail(fmt.Sprintf("%s:%d", smtpServer, port), auth, from, []string{to}, msg); err != nil {
+		return fmt.Errorf("failed to send email: %v", err)
+	}
+	return nil
 }

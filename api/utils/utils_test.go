@@ -52,56 +52,56 @@ func TestGenerateJWT_EmptyID(t *testing.T) {
 	}
 }
 
-func TestValidatePasswordShortPassword(t *testing.T) {
-	err := ValidatePassword("pass")
+func TestCheckPasswordStrengthShortPassword(t *testing.T) {
+	err := CheckPasswordStrength("pass")
 	expected := fmt.Errorf("password must be at least 8 characters long")
 
 	if err == nil || err.Error() != expected.Error() {
-		t.Errorf("ValidatePassword(\"pass\") = %v; want %v", err, expected)
+		t.Errorf("CheckPasswordStrength(\"pass\") = %v; want %v", err, expected)
 	}
 }
-func TestValidatePasswordNoUppercase(t *testing.T) {
-	err := ValidatePassword("password")
+func TestCheckPasswordStrengthNoUppercase(t *testing.T) {
+	err := CheckPasswordStrength("password")
 	expected := fmt.Errorf("password must contain at least one uppercase letter")
 
 	if err == nil || err.Error() != expected.Error() {
-		t.Errorf("ValidatePassword(\"password\") = %v; want %v", err, expected)
+		t.Errorf("CheckPasswordStrength(\"password\") = %v; want %v", err, expected)
 	}
 }
 
-func TestValidatePasswordNoLowercase(t *testing.T) {
-	err := ValidatePassword("PASSWORD")
+func TestCheckPasswordStrengthNoLowercase(t *testing.T) {
+	err := CheckPasswordStrength("PASSWORD")
 	expected := fmt.Errorf("password must contain at least one lowercase letter")
 
 	if err == nil || err.Error() != expected.Error() {
-		t.Errorf("ValidatePassword(\"PASSWORD\") = %v; want %v", err, expected)
+		t.Errorf("CheckPasswordStrength(\"PASSWORD\") = %v; want %v", err, expected)
 	}
 }
 
-func TestValidatePasswordNoDigit(t *testing.T) {
-	err := ValidatePassword("Password")
+func TestCheckPasswordStrengthNoDigit(t *testing.T) {
+	err := CheckPasswordStrength("Password")
 	expected := fmt.Errorf("password must contain at least one digit")
 
 	if err == nil || err.Error() != expected.Error() {
-		t.Errorf("ValidatePassword(\"Password\") = %v; want %v", err, expected)
+		t.Errorf("CheckPasswordStrength(\"Password\") = %v; want %v", err, expected)
 	}
 }
 
-func TestValidatePasswordNoSpecialCharacter(t *testing.T) {
-	err := ValidatePassword("Password1")
+func TestCheckPasswordStrengthNoSpecialCharacter(t *testing.T) {
+	err := CheckPasswordStrength("Password1")
 	expected := fmt.Errorf("password must contain at least one special character")
 
 	if err == nil || err.Error() != expected.Error() {
-		t.Errorf("ValidatePassword(\"Password1\") = %v; want %v", err, expected)
+		t.Errorf("CheckPasswordStrength(\"Password1\") = %v; want %v", err, expected)
 	}
 }
 
-func TestValidatePasswordEmptyPassword(t *testing.T) {
-	err := ValidatePassword("")
+func TestCheckPasswordStrengthEmptyPassword(t *testing.T) {
+	err := CheckPasswordStrength("")
 	expected := fmt.Errorf("password must be at least 8 characters long")
 
 	if err == nil || err.Error() != expected.Error() {
-		t.Errorf("ValidatePassword(\"\") = %v; want %v", err, expected)
+		t.Errorf("CheckPasswordStrength(\"\") = %v; want %v", err, expected)
 	}
 }
 

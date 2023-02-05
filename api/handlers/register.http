@@ -1,0 +1,10 @@
+   # Your request headers, e.g.
+    POST http://localhost:8080/register
+    Content-Type: application/json
+
+    # The request body, if any
+    {
+        "username": "bkawk",
+        "email": "williamcharleshill@gmail.com",
+        "password": "This1sMyP@ssword!"
+    }

@@ -3,6 +3,7 @@ package handlers
 import (
 	"context"
 	"net/http"
+	"os"
 	"time"
 
 	"bkawk/go-echo/api/models"
@@ -11,15 +12,12 @@ import (
 	"github.com/labstack/echo/v4"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.uber.org/zap"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // RegisterEndpoint handles user registration requests
 func LoginPost(c echo.Context) error {
 
-	// Get logger from context
-	logger := c.Get("logger").(*zap.Logger)
 	// Get database connection from context
 	db := c.Get("db").(*mongo.Database)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -28,11 +26,8 @@ func LoginPost(c echo.Context) error {
 	// Validate input
 	u := new(models.User)
 	if err := c.Bind(u); err != nil {
-		return err
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to bind request body"})
 	}
-
-	// Generate the timestamp
-	currentTime := time.Now().Unix()
 
 	// Find user by email or username
 	var user models.User
@@ -40,44 +35,44 @@ func LoginPost(c echo.Context) error {
 	err := collection.FindOne(ctx, bson.M{
 		"$or": []bson.M{
 			{"email": u.Email},
-			{"username": u.Email},
+			{"username": u.Username},
 		},
 	}).Decode(&user)
 	if err != nil {
-		logger.Error("Failed to find user", zap.Error(err))
 		return c.JSON(http.StatusUnauthorized, echo.Map{"error": "Invalid credentials"})
 	}
 
 	// Check if password matches
-	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(u.Password))
+	err = bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(os.Getenv("BCRYPT_PASSWORD")))
 	if err != nil {
-		logger.Error("Failed to compare password", zap.Error(err))
-		return c.JSON(http.StatusUnauthorized, echo.Map{"error": "Invalid credentials"})
+
+		return c.JSON(http.StatusUnauthorized, echo.Map{"error": "Invalid brcypt credentials"})
 	}
 
 	// Generate JWT token
 	jwtToken, err := utils.GenerateJWT(user.ID)
 	if err != nil {
-		logger.Error("Failed to generate token", zap.Error(err))
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to generate token"})
 	}
+
+	// Generate the timestamp
+	currentTime := time.Now().Unix()
 
 	// Check if user already has a refresh token, if not update with one and last seen.
 	var refreshToken string
 	if user.RefreshToken == "" {
 		// Generate refresh token
-		refreshToken, err := utils.GenerateRefreshToken()
+		resToken, err := utils.GenerateRefreshToken()
 		if err != nil {
-			logger.Error("Failed to generate refresh token", zap.Error(err))
 			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to generate refresh token"})
 		}
+		refreshToken = resToken
 
 		// Update user with refresh token
 		_, err = collection.UpdateOne(ctx, bson.M{"_id": user.ID}, bson.M{
 			"$set": bson.M{"refreshToken": refreshToken, "lastSeen": currentTime},
 		})
 		if err != nil {
-			logger.Error("Failed to generate refresh token", zap.Error(err))
 			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to generate refresh token"})
 		}
 	} else {
@@ -87,7 +82,6 @@ func LoginPost(c echo.Context) error {
 			"$set": bson.M{"lastSeen": currentTime},
 		})
 		if err != nil {
-			logger.Error("Failed to update last seen date", zap.Error(err))
 			return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to update last seen date"})
 		}
 	}

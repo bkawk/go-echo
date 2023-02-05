@@ -12,7 +12,7 @@ var (
 	specialRegex   = regexp.MustCompile(`[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]+`)
 )
 
-func ValidatePassword(password string) error {
+func CheckPasswordStrength(password string) error {
 	if len(password) < 8 {
 		return fmt.Errorf("password must be at least 8 characters long")
 	}

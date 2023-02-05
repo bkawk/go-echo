@@ -6,13 +6,11 @@ import (
 	"context"
 	"net/http"
 	"os"
-	"time"
 
 	"github.com/joho/godotenv"
 	"github.com/juju/ratelimit"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"go.uber.org/zap"
 )
 
 func main() {
@@ -20,54 +18,15 @@ func main() {
 	// Initialize Echo
 	e := echo.New()
 
-	// Zap logger
-	// logger.Debug("debug log")
-	// logger.Info("info log")
-	// logger.Warn("warn log")
-	// logger.Error("error log")
-	logger, _ := zap.NewProduction()
-	defer logger.Sync()
-	e.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			req := c.Request()
-			res := c.Response()
-			start := time.Now()
-			if err := next(c); err != nil {
-				c.Error(err)
-			}
-			stop := time.Now()
-			latency := stop.Sub(start)
-
-			fields := []zap.Field{
-				zap.String("method", req.Method),
-				zap.String("uri", req.RequestURI),
-				zap.Int("status", res.Status),
-				zap.Duration("latency", latency),
-				zap.String("remote_ip", c.RealIP()),
-				zap.String("user_agent", req.UserAgent()),
-			}
-
-			if res.Status >= http.StatusBadRequest {
-				logger.Warn("Request failed", fields...)
-			} else {
-				logger.Info("Request succeeded", fields...)
-			}
-
-			return nil
-		}
-	})
-
 	// Load .env file
 	err := godotenv.Load()
 	if err != nil {
-		logger.Error("Environment variables not loaded")
 		panic(err)
 	}
 
 	// Connect to MongoDB Atlas
 	client, err := database.Connect()
 	if err != nil {
-		logger.Error("MongoDB connection failed")
 		return
 	}
 	defer client.Disconnect(context.TODO())
@@ -78,7 +37,6 @@ func main() {
 		return func(c echo.Context) error {
 			if limiter.TakeAvailable(1) == 0 {
 				msg := "Rate limit exceeded"
-				logger.Warn(msg)
 				return c.String(http.StatusTooManyRequests, msg)
 			}
 			return next(c)
@@ -103,6 +61,9 @@ func main() {
 
 	// Limit Body Size
 	e.Use(middleware.BodyLimit("100K"))
+
+	// Add middleware to be more secure with xss etc
+	e.Use(middleware.Secure())
 
 	// Routes
 	e.GET("/health", handlers.HealthGet)                            // Health Check

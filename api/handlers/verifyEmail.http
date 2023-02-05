@@ -1,0 +1,4 @@
+   # Your request headers, e.g.
+    GET http://localhost:8080/verify-email?verificationCode=1234567890
+    Content-Type: application/json
+
