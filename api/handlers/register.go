@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"bkawk/go-echo/api/email"
+	"bkawk/go-echo/api/emails"
 	"bkawk/go-echo/api/models"
 	"bkawk/go-echo/api/utils"
 	"context"
@@ -82,8 +82,14 @@ func RegisterPost(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to save user"})
 	}
 
+	// Get the verification URL from the environment
+	verifyUrl := os.Getenv("VERIFY_URL")
+	if verifyUrl == "" {
+		return fmt.Errorf("environment variable not set: VERIFY_URL")
+	}
+
 	// Send welcome email
-	emailError := email.SendWelcomeEmail(u.Email, "http://example.com/verify?verificationCode="+u.VerificationCode)
+	emailError := emails.SendWelcomeEmail(u.Email, verifyUrl+"?verificationCode="+u.VerificationCode)
 	if emailError != nil {
 		fmt.Println(emailError)
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": emailError})

@@ -28,8 +28,8 @@ func CheckUsernameGet(c echo.Context) error {
 		"username": username,
 	}).Decode(&existingUser)
 	if err == nil {
-		return c.JSON(http.StatusOK, echo.Map{"message": "Username not available"})
+		return c.JSON(http.StatusOK, echo.Map{"message": "Username not available", "available": false})
 	}
 
-	return c.JSON(http.StatusOK, echo.Map{"message": "Username available"})
+	return c.JSON(http.StatusOK, echo.Map{"message": "Username available", "available": true})
 }

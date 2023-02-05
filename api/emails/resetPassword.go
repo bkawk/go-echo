@@ -1,4 +1,4 @@
-package email
+package emails
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"strconv"
 )
 
-func SendWelcomeEmail(to, verificationLink string) error {
+func SendResetPasswordEmail(to, resetPasswordLink string) error {
 
 	var (
 		smtpServer = os.Getenv("SMTP_SERVER")
@@ -30,10 +30,13 @@ func SendWelcomeEmail(to, verificationLink string) error {
 		<html>
 			<body>
 				<p>
-					Welcome! Thank you for signing up.
+					Hello!
 				</p>
 				<p>
-					Please click the following link to verify your account:
+					We received a request to reset your password. If you did not make this request, please ignore this email.
+				</p>
+				<p>
+					Please click the following link to reset your password:
 					<br />
 					<a href="%s">%s</a>
 				</p>
@@ -47,7 +50,7 @@ func SendWelcomeEmail(to, verificationLink string) error {
 				</p>
 			</body>
 		</html>
-	`, verificationLink, verificationLink)
+	`, resetPasswordLink, resetPasswordLink)
 	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: Welcome\r\nContent-Type: text/html\r\n\r\n%s", from, to, body))
 	auth := smtp.PlainAuth("", username, password, smtpServer)
 	if err := smtp.SendMail(fmt.Sprintf("%s:%d", smtpServer, port), auth, from, []string{to}, msg); err != nil {
