@@ -50,7 +50,7 @@ func ForgotPasswordPost(c echo.Context) error {
 		return fmt.Errorf("environment variable not set: VERIFY_URL")
 	}
 	// Send welcome email
-	emailError := emails.SendResetPasswordEmail(u.Email, resetEmailUrl+"?verificationCode="+u.VerificationCode)
+	emailError := emails.SendResetPasswordEmail(u.Email, resetEmailUrl+"?verificationCode="+u.PasswordResetToken)
 	if emailError != nil {
 		fmt.Println(emailError)
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": emailError})

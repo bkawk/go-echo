@@ -7,9 +7,9 @@ type User struct {
 	Password           string `json:"password" bson:"password" validate:"max=64,min=8"`
 	RefreshToken       string `json:"refreshToken,omitempty" bson:"refreshToken,omitempty"`
 	CreatedAt          int64  `json:"createdAt" bson:"createdAt"`
-	VerificationCode   string `json:"verificationCode,omitempty" bson:"verificationCode,omitempty"`
-	PasswordResetToken string `json:"passwordResetToken,omitempty" bson:"passwordResetToken,omitempty"`
+	VerificationCode   string `json:"verificationCode,omitempty" bson:"verificationCode,omitempty"`     // Verification code for email verification
+	PasswordResetToken string `json:"passwordResetToken,omitempty" bson:"passwordResetToken,omitempty"` // Verification code for password reset
 	LastSeen           int64  `json:"lastSeen,omitempty" bson:"lastSeen,omitempty"`
 	IsVerified         bool   `bson:"isVerified"`
-	ForgotPassword     int64  `json:"forgotPassword,omitempty" bson:"forgotPassword,omitempty"`
+	ForgotPassword     int64  `json:"forgotPassword,omitempty" bson:"forgotPassword,omitempty"` // Timestamp for forgot password
 }
