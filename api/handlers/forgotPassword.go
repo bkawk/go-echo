@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"bkawk/go-echo/api/emails"
 	"bkawk/go-echo/api/models"
 	"context"
 	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -42,8 +44,17 @@ func ForgotPasswordPost(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusTooManyRequests, fmt.Sprintf("Try again in %d minutes and %d seconds", int(waitTime.Minutes()), int(waitTime.Seconds())%60))
 	}
 
-	// send email logic
-	fmt.Println("Sending forgot password email to", u.Email)
+	// Get the verification URL from the environment
+	resetEmailUrl := os.Getenv("RESET_EMAIL_URL")
+	if resetEmailUrl == "" {
+		return fmt.Errorf("environment variable not set: VERIFY_URL")
+	}
+	// Send welcome email
+	emailError := emails.SendResetPasswordEmail(u.Email, resetEmailUrl+"?verificationCode="+u.VerificationCode)
+	if emailError != nil {
+		fmt.Println(emailError)
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": emailError})
+	}
 
 	user.ForgotPassword = time.Now().Unix()
 	if _, err := collection.ReplaceOne(ctx, filter, user); err != nil {
