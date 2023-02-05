@@ -32,7 +32,6 @@ func RegisterPost(c echo.Context) error {
 
 	// Validate strong password
 	if err := utils.CheckPasswordStrength(u.Password); err != nil {
-
 		return c.JSON(http.StatusBadRequest, echo.Map{"error": err.Error()})
 	}
 
