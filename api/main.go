@@ -74,8 +74,8 @@ func main() {
 	e.DELETE("/refresh", handlers.RefreshDelete)                    // Invalidate the current refresh token, effectively logging the user out
 	e.POST("/forgot-password", handlers.ForgotPasswordPost)         // Send a password reset email to the user
 	e.POST("/reset-password", handlers.ResetPasswordPost)           // Reset the password of a user
-	e.PUT("/profile", handlers.ProfilePut)                          // Update the profile information of a user
-	e.GET("/profile/:username", handlers.ProfileGet)                // Retrieve the profile information of a specific user,
+	e.PUT("/profile", handlers.ProfilePut)                          // Update the users profile information
+	e.GET("/profile/:username", handlers.ProfileGet)                // Retrieve the public profile information of a specific user,
 	e.GET("/verify-email", handlers.VerifyEmailGet)                 // Verify the email address of a user
 	e.POST("/resend-verification", handlers.ResendVerificationPost) // Resend the verification email to a user
 
