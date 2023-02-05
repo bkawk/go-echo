@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"testing"
+	"time"
 )
 
 func TestGenerateJWT_Success(t *testing.T) {
@@ -104,6 +105,19 @@ func TestValidatePasswordEmptyPassword(t *testing.T) {
 	}
 }
 
+func TestGenerateRefreshTokenSpeed(t *testing.T) {
+	start := time.Now()
+	_, err := GenerateRefreshToken()
+	if err != nil {
+		t.Fatalf("failed to generate refresh token: %v", err)
+	}
+	elapsed := time.Since(start)
+
+	if elapsed > time.Millisecond*50 {
+		t.Fatalf("GenerateRefreshToken took too long: %v", elapsed)
+	}
+}
+
 func TestGenerateRefreshToken(t *testing.T) {
 	token, err := GenerateRefreshToken()
 	if err != nil {
@@ -178,5 +192,18 @@ func TestGenerateUUIDLength(t *testing.T) {
 			t.Errorf("GenerateUUID returned an unexpected length identifier: got %d, expected %d", len(id), expectedLength)
 			break
 		}
+	}
+}
+
+func TestGenerateUUIDSpeed(t *testing.T) {
+	numberOfIDs := 10000
+	start := time.Now()
+	for i := 0; i < numberOfIDs; i++ {
+		GenerateUUID()
+	}
+	elapsed := time.Since(start)
+
+	if elapsed > 100*time.Millisecond {
+		t.Errorf("GenerateUUID took too long to generate %d UUIDs: %s", numberOfIDs, elapsed)
 	}
 }

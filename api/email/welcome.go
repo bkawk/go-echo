@@ -2,15 +2,21 @@ package email
 
 import (
 	"net/smtp"
-	"os"
 
 	"bkawk/go-echo/api/models"
 )
 
-// Send welcome email
-func WelcomeEmail(u *models.User) error {
-	from := os.Getenv("EMAIL_FROM")
-	password := os.Getenv("SMTP_PASSWORD")
+type EmailSender interface {
+	Send(from, password, server string, auth smtp.Auth, to []string, msg []byte) error
+}
+
+type SMTPSender struct{}
+
+func (s SMTPSender) Send(from, password, server string, auth smtp.Auth, to []string, msg []byte) error {
+	return smtp.SendMail(server, auth, from, to, msg)
+}
+
+func WelcomeEmail(u *models.User, from, password, server string, sender EmailSender) error {
 	to := u.Email
 	message := `Subject: Welcome to Our System
 	<p>Dear ` + u.Username + `,</p>
@@ -18,8 +24,6 @@ func WelcomeEmail(u *models.User) error {
 	<p>Best regards,</p>
 	<p>Support Team</p>`
 
-	smtpServer := os.Getenv("SMTP_SERVER")
-	auth := smtp.PlainAuth("", from, password, smtpServer)
-	err := smtp.SendMail(smtpServer, auth, from, []string{to}, []byte(message))
-	return err
+	auth := smtp.PlainAuth("", from, password, server)
+	return sender.Send(from, password, server, auth, []string{to}, []byte(message))
 }

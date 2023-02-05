@@ -6,7 +6,6 @@ import (
 	"os"
 	"time"
 
-	"bkawk/go-echo/api/email"
 	"bkawk/go-echo/api/models"
 	"bkawk/go-echo/api/utils"
 
@@ -75,12 +74,12 @@ func RegisterPost(c echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to save user"})
 	}
 
-	// Call the WelcomeEmail function
-	err = email.WelcomeEmail(u)
-	if err != nil {
-		logger.Error("We couldn't send a welcome email at this time, but your account has been successfully created", zap.Error(err))
-		return c.JSON(http.StatusOK, echo.Map{"error": "We couldn't send a welcome email at this time, but your account has been successfully created"})
-	}
+	// // Call the WelcomeEmail function
+	// err = email.WelcomeEmail(u)
+	// if err != nil {
+	// 	logger.Error("We couldn't send a welcome email at this time, but your account has been successfully created", zap.Error(err))
+	// 	return c.JSON(http.StatusOK, echo.Map{"error": "We couldn't send a welcome email at this time, but your account has been successfully created"})
+	// }
 
 	return c.JSON(http.StatusOK, echo.Map{"message": "Your account has been successfully created"})
 }
