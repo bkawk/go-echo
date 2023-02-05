@@ -3,6 +3,7 @@ package handlers
 import (
 	"bkawk/go-echo/api/emails"
 	"bkawk/go-echo/api/models"
+	"bkawk/go-echo/api/utils"
 	"context"
 	"fmt"
 	"net/http"
@@ -49,6 +50,14 @@ func ForgotPasswordPost(c echo.Context) error {
 	if resetEmailUrl == "" {
 		return fmt.Errorf("environment variable not set: VERIFY_URL")
 	}
+
+	// Generate a PasswordResetToken prefixed with "rst_"
+	prtCode, err := utils.GenerateUUID()
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to generate user ID"})
+	}
+	user.PasswordResetToken = "rst_" + prtCode
+
 	// Send welcome email
 	emailError := emails.SendResetPasswordEmail(u.Email, resetEmailUrl+"?verificationCode="+u.PasswordResetToken)
 	if emailError != nil {

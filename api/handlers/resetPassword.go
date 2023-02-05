@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"net/http"
+	"os"
 	"time"
 
 	"bkawk/go-echo/api/models"
@@ -16,9 +18,14 @@ import (
 // RegisterEndpoint handles user registration requests
 func ResetPasswordPost(c echo.Context) error {
 	var err error
-	passwordResetToken := c.FormValue("passwordResetToken")
-	newPassword := c.FormValue("newPassword")
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+
+	// Validate input
+	u := new(models.User)
+	if err := c.Bind(u); err != nil {
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to bind request body"})
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(os.Getenv("BCRYPT_PASSWORD")), bcrypt.DefaultCost)
 	if err != nil {
 		return c.String(http.StatusBadRequest, "Failed to hash password")
 	}
@@ -32,7 +39,8 @@ func ResetPasswordPost(c echo.Context) error {
 
 	// Find the user document with the password reset token
 	var user models.User
-	err = collection.FindOne(ctx, bson.M{"passwordResetToken": passwordResetToken}).Decode(&user)
+	fmt.Println(u.PasswordResetToken)
+	err = collection.FindOne(ctx, bson.M{"passwordResetToken": u.PasswordResetToken}).Decode(&user)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return c.String(http.StatusBadRequest, "Invalid password reset token")
@@ -48,12 +56,12 @@ func ResetPasswordPost(c echo.Context) error {
 	}
 
 	// Update the user document with the new password
-	filter := bson.M{"passwordResetToken": passwordResetToken}
+	filter := bson.M{"passwordResetToken": u.PasswordResetToken}
 	var update bson.M
 	if time.Now().Unix()-forgotPassword > 5*60 {
-		update = bson.M{"$set": bson.M{"password": hashedPassword}, "$unset": bson.M{"passwordResetToken": ""}}
+		update = bson.M{"$set": bson.M{"password": string(hashedPassword)}, "$unset": bson.M{"passwordResetToken": ""}}
 	} else {
-		update = bson.M{"$set": bson.M{"password": hashedPassword}}
+		update = bson.M{"$set": bson.M{"password": string(hashedPassword)}}
 	}
 	_, err = collection.UpdateOne(ctx, filter, update)
 	if err != nil {
