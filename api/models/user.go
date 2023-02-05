@@ -7,7 +7,7 @@ type User struct {
 	Password         string `json:"password" bson:"password" validate:"required,max=64,min=8"`
 	RefreshToken     string `json:"refreshToken,omitempty" bson:"refreshToken,omitempty"`
 	CreatedAt        int64  `json:"createdAt" bson:"createdAt"`
-	VerificationCode int    `json:"verification,omitempty" bson:"verification,omitempty"`
+	VerificationCode string `json:"verificationCode,omitempty" bson:"verificationCode,omitempty"`
 	LastSeen         int64  `json:"lastSeen,omitempty" bson:"lastSeen,omitempty"`
 	IsVerified       bool   `bson:"isVerified"`
 }

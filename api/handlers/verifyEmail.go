@@ -25,8 +25,8 @@ func VerifyEmailGet(c echo.Context) error {
 	collection := db.Collection("users")
 	// Define the filter to find the user with the given verification code
 	filter := bson.M{"verificationCode": verificationCode}
-	// Define the update to set the "isVerified" field to true
-	update := bson.M{"$set": bson.M{"isVerified": true}}
+	// Define the update to set the "isVerified" field to true and unset the "verificationCode" field
+	update := bson.M{"$set": bson.M{"isVerified": true}, "$unset": bson.M{"verificationCode": ""}}
 
 	// Execute the update on the user in the database
 	res, err := collection.UpdateOne(ctx, filter, update)

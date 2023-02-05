@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"net/http"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -66,12 +65,12 @@ func RegisterPost(c echo.Context) error {
 	u.ID = "usr_" + uuid
 	u.IsVerified = false
 
-	// Generate a unique user ID prefixed with "usr_"
-	num, err := utils.GenerateNumber(6)
+	// Generate a verification prefixed with "ver_"
+	vCode, err := utils.GenerateUUID()
 	if err != nil {
-		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to generate verification code"})
+		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to generate user ID"})
 	}
-	u.VerificationCode = num
+	u.VerificationCode = "ver_" + vCode
 
 	// Generate the timestamp
 	u.CreatedAt = time.Now().Unix()
@@ -84,7 +83,7 @@ func RegisterPost(c echo.Context) error {
 	}
 
 	// Send welcome email
-	emailError := email.SendWelcomeEmail(u.Email, "http://example.com/verify?code="+strconv.Itoa(u.VerificationCode))
+	emailError := email.SendWelcomeEmail(u.Email, "http://example.com/verify?verificationCode="+u.VerificationCode)
 	if emailError != nil {
 		fmt.Println(emailError)
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": emailError})
