@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bkawk/go-echo/api/customMiddleware"
 	"bkawk/go-echo/api/database"
 	"bkawk/go-echo/api/handlers"
 	"context"
@@ -50,6 +51,8 @@ func main() {
 			return next(c)
 		}
 	})
+
+	e.Use(customMiddleware.Fingerprint)
 
 	// Configure CORS middleware
 	config := middleware.CORSConfig{

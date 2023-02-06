@@ -2,15 +2,18 @@ package utils
 
 import (
 	"errors"
-	"os"
 	"regexp"
 
 	"github.com/golang-jwt/jwt"
 )
 
+type env interface {
+	Getenv(key string) string
+}
+
 // VerifyJwt verifies that the JWT is valid and has been signed with the secret
-func VerifyJwt(jwtToken string) (string, error) {
-	secret := os.Getenv("JWT_SECRET")
+func VerifyJwt(e env, jwtToken string) (string, error) {
+	secret := e.Getenv("JWT_SECRET")
 	if secret == "" {
 		return "", errors.New("JWT_SECRET environment variable is not set")
 	}

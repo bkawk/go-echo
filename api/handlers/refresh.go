@@ -1,59 +1,94 @@
 package handlers
 
 import (
+	"context"
 	"net/http"
+	"time"
 
 	"bkawk/go-echo/api/models"
+	"bkawk/go-echo/api/utils"
 
 	"github.com/labstack/echo/v4"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
+
+// Response is a struct to hold the response data for an HTTP request
+type PostResponse struct {
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
+}
 
 // RegisterEndpoint handles user registration requests
 func RefreshPost(c echo.Context) error {
-	// bind the incoming request body to a User struct
-	u := new(models.User)
-	if err := c.Bind(u); err != nil {
-		return err
-	}
+	// Get the refreshToken from the request
+	refreshToken := c.Param("refreshToken")
+	// Get database connection from context
+	db := c.Get("db").(*mongo.Database)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
 
-	// validate user input
-	if u.Username == "" || u.Password == "" || u.Email == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "invalid request body",
+	// Find the user with the matching refreshToken
+	var user models.User
+	err := db.Collection("users").FindOne(ctx, bson.M{"refreshToken": refreshToken}).Decode(&user)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return c.JSON(http.StatusBadRequest, PostResponse{
+				Message: "Invalid refresh token",
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, PostResponse{
+			Message: "Failed to find user in database",
 		})
 	}
 
-	// add the new user to the database
-	// (this is a dummy implementation and would be replaced in a real application)
-	// ...
+	// Generate a JWT with the user's ID added as a claim
+	jwt, err := utils.GenerateJWT(user.ID)
+	if err != nil {
+		return c.JSON(http.StatusInternalServerError, PostResponse{
+			Message: "Failed to generate JWT",
+		})
+	}
 
-	// return a success response
-	return c.JSON(http.StatusOK, map[string]string{
-		"message": "user registered successfully",
+	// Return the JWT to the user
+	return c.JSON(http.StatusOK, PostResponse{
+		Message: "Success",
+		Data: map[string]string{
+			"jwt": jwt,
+		},
 	})
+}
+
+type DeleteResponse struct {
+	Message string      `json:"message"`
+	Data    interface{} `json:"data,omitempty"`
 }
 
 // RegisterEndpoint handles user registration requests
 func RefreshDelete(c echo.Context) error {
-	// bind the incoming request body to a User struct
-	u := new(models.User)
-	if err := c.Bind(u); err != nil {
-		return err
-	}
 
-	// validate user input
-	if u.Username == "" || u.Password == "" || u.Email == "" {
-		return c.JSON(http.StatusBadRequest, map[string]string{
-			"error": "invalid request body",
+	// Get the current refreshToken from the request header
+	refreshToken := c.Request().Header.Get("Authorization")
+
+	// Get database connection from context
+	db := c.Get("db").(*mongo.Database)
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	// Find the user with the matching refreshToken and update it to an empty string
+	_, err := db.Collection("users").UpdateOne(ctx, bson.M{"refreshToken": refreshToken}, bson.M{"$set": bson.M{"refreshToken": ""}})
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return c.JSON(http.StatusBadRequest, DeleteResponse{
+				Message: "Invalid refresh token",
+			})
+		}
+		return c.JSON(http.StatusInternalServerError, DeleteResponse{
+			Message: "Failed to update user in database",
 		})
 	}
 
-	// add the new user to the database
-	// (this is a dummy implementation and would be replaced in a real application)
-	// ...
-
-	// return a success response
-	return c.JSON(http.StatusOK, map[string]string{
-		"message": "user registered successfully",
+	return c.JSON(http.StatusOK, DeleteResponse{
+		Message: "Success",
 	})
 }
