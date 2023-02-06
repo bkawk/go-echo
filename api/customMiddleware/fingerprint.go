@@ -1,36 +1,37 @@
 package customMiddleware
 
 import (
-	"strings"
+	"bkawk/go-echo/api/utils"
 
 	"github.com/labstack/echo/v4"
 )
 
 func Fingerprint(next echo.HandlerFunc) echo.HandlerFunc {
 	return func(c echo.Context) error {
-		userAgent := c.Request().UserAgent()
-		deviceType := getDeviceType(userAgent)
-		screenResolution := getScreenResolution(c.Request().Header.Get("User-Agent"))
 
-		fingerprint := deviceType + "-" + screenResolution
+		userAgent := c.Request().UserAgent()
+
+		// Get device type and screen resolution
+		deviceType := c.Request().Header.Get("Device-Type")
+		screenResolution := c.Request().Header.Get("Screen-Resolution")
+
+		// Get browser and operating system information
+		browser := c.Request().Header.Get("Browser")
+		os := c.Request().Header.Get("Operating-System")
+
+		// Generate hashed fingerprint string
+		fingerprint := userAgent + deviceType + screenResolution + browser + os
+		hashedFingerprint, err := utils.Hash([]byte(fingerprint))
+		if err != nil {
+			return echo.NewHTTPError(500, "Error generating hashed fingerprint")
+		}
 
 		// Add the fingerprint to the context so that it can be used later in the request
-		c.Set("fingerprint", fingerprint)
+		c.Set("fingerprint", hashedFingerprint)
 
 		return next(c)
-	}
-}
 
-func getDeviceType(userAgent string) string {
-	if strings.Contains(userAgent, "Mobile") {
-		return "mobile"
 	}
-	return "desktop"
-}
-
-func getScreenResolution(userAgent string) string {
-	// Example implementation, actual implementation would depend on the specific requirements
-	return "1920x1080"
 }
 
 // func MyHandler(c echo.Context) error {
