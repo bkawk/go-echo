@@ -42,7 +42,7 @@ Go-Echo Boilerplate API is designed to be a fast and efficient solution for buil
  - JWT_SECRET: The secret used for signing JSON Web Tokens (JWT), e.g. jwtSecret
  - VERIFY_URL: The URL used for email verification, e.g. http://example.com/verify
  - RESET_EMAIL_URL: The URL used for resetting the email, e.g. http://example.com/reset-email
-```
+
 
 5. Run the following command to install the dependencies:
 
