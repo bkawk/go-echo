@@ -58,7 +58,7 @@ Go-Echo Boilerplate API is designed to be a fast and efficient solution for buil
  - [Check username availability](username_availability.md): GET /username/:username
  - [Register](register.md): POST /register
  - [Login](login.md): POST /login
- - [Verify Email](verify_email.md): GET /verify/:token
+ - [Verify Email](verify_email.md): GET /verify-email? verificationCode=<verificationCode>
  - [Resend Verification Email](resend_verification.md): POST /resend-verification
  - [Reset Password](password_reset.md): POST /reset-password
  - [Refresh Token](refresh_token.md): POST /refresh
