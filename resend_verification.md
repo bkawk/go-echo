@@ -20,6 +20,7 @@ This endpoint is used to resend the verification code to a user's email address.
 {
   "email": "user@example.com"
 }
+```
 
 ### Response
 
