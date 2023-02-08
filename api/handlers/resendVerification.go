@@ -14,16 +14,29 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// User struct for storing user data in the database
 type User struct {
 	Email            string    `bson:"email"`
 	VerificationCode string    `bson:"verificationCode"`
 	CreatedAt        time.Time `bson:"createdAt"`
 }
 
+// Request struct for validating the email input
+type Request struct {
+	Email string `json:"email" validate:"required,email,max=100"`
+}
+
 // RegisterEndpoint handles user registration requests
 func ResendVerificationPost(c echo.Context) error {
-	// Get user email from request body
-	email := c.FormValue("email")
+	// Bind request to the Request struct and validate the email
+	request := new(Request)
+	if err := c.Bind(request); err != nil {
+		return err
+	}
+	if err := c.Validate(request); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	email := request.Email
 
 	// Get database connection from context
 	db := c.Get("db").(*mongo.Database)
