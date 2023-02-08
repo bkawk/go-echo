@@ -33,6 +33,7 @@ Go-Echo Boilerplate API is designed to be a fast and efficient solution for buil
 
  - PORT: The port on which the server will run, e.g. :8000
  - MONGO_URL: The connection string for your MongoDB Atlas cluster, e.g. mongodb+srv://<username>:<password>@cluster0.mongodb.net/test?retryWrites=true&w=majority
+ 
  - MONGO_DB: The name of the database, e.g. databaseName
  - BCRYPT_PASSWORD: The bcrypt password, e.g. bcryptPassword
  - EMAIL_FROM: The email address from which emails will be sent, e.g. my@email.com
@@ -53,17 +54,18 @@ Go-Echo Boilerplate API is designed to be a fast and efficient solution for buil
 ``` go run main.go  ```
 
 ## Endpoints
- - [Health Check](health_check.md): GET /health
- - [User Registration](user_registration.md): POST /register
+ - [Health Check](health.md): GET /health
  - [Check username availability](username_availability.md): GET /username/:username
+ - [Register](register.md): POST /register
  - [Login](login.md): POST /login
- - [Refresh Token](refresh_token.md): POST /refresh
- - [Invalidate Token](invalidate_token.md): POST /invalidate
- - [Password Reset](password_reset.md): POST /reset-password
- - [Update Profile](update_profile.md): PUT /profile
- - [Retrieve Profile](retrieve_profile.md): GET /profile/:user_id
  - [Verify Email](verify_email.md): GET /verify/:token
  - [Resend Verification Email](resend_verification.md): POST /resend-verification
+ - [Reset Password](password_reset.md): POST /reset-password
+ - [Refresh Token](refresh_token.md): POST /refresh
+ - [Invalidate Refresh Token](invalidate_token.md): DELETE /refresh
+ 
+ - [Update Profile](update_profile.md): PUT /profile ***
+ - [Retrieve Profile](retrieve_profile.md): GET /profile/:user_id ***
 
 ## How to Contribute
 If you would like to contribute to the project, please follow these steps:

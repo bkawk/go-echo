@@ -22,7 +22,7 @@ type PostResponse struct {
 // RegisterEndpoint handles user registration requests
 func RefreshPost(c echo.Context) error {
 	// Get the refreshToken from the request
-	refreshToken := c.Param("refreshToken")
+	refreshToken := c.FormValue("refreshToken")
 	// Get database connection from context
 	db := c.Get("db").(*mongo.Database)
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
@@ -67,8 +67,8 @@ type DeleteResponse struct {
 // RegisterEndpoint handles user registration requests
 func RefreshDelete(c echo.Context) error {
 
-	// Get the current refreshToken from the request header
-	refreshToken := c.Request().Header.Get("Authorization")
+	// Get the refreshToken from the request
+	refreshToken := c.FormValue("refreshToken")
 
 	// Get database connection from context
 	db := c.Get("db").(*mongo.Database)
