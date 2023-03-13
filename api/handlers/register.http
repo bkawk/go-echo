@@ -1,10 +1,11 @@
-   # Your request headers, e.g.
-    POST http://localhost:8080/register
-    Content-Type: application/json
+# Your request headers, e.g.
+POST http://localhost:8080/register
+Content-Type: application/json
 
-    # The request body, if any
-    {
-        "username": "bkawk",
-        "email": "williamcharleshill@gmail.com",
-        "password": "This1sMyP@ssword!"
-    }
+# The request body, if any
+{
+    "name": "Will Hill",
+    "username": "bkawk2",
+    "email": "williamcharleshill2@gmail.com",
+    "password": "This1sMyP@ssword!"
+}
