@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import useRegister from "../hooks/useRegister";
 
 interface FormValues {
   name: string;
@@ -17,18 +18,24 @@ const DoRegister: React.FC<Props> = () => {
     password: "",
   });
 
-  const { response, isLoading, error, register } = useRegister({ formData });
+  const { response, isLoading, formError, serverError, register } =
+    useRegister();
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormData((prevState) => ({ ...prevState, [name]: value }));
   };
 
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    register(formData);
+  };
+
   return (
     <div>
       <h1>Register</h1>
 
-      <form onSubmit={register}>
+      <form onSubmit={handleSubmit}>
         <input type="hidden" name="Content-Type" value="application/json" />
 
         <label htmlFor="name">Name:</label>
@@ -70,6 +77,12 @@ const DoRegister: React.FC<Props> = () => {
           onChange={handleInputChange}
         />
         <br />
+
+        {formError?.password && <p>Form error: {formError?.password}</p>}
+        {formError?.email && <p>Form error: {formError?.email}</p>}
+        {formError?.username && <p>Form error: {formError?.username}</p>}
+        {formError?.name && <p>Form error: {formError?.name}</p>}
+        {serverError && <p>Server error: {serverError}</p>}
 
         <input type="submit" value="Register" />
       </form>
