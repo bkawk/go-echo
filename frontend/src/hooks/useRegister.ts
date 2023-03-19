@@ -1,4 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import useFetch from "../hooks/useFetch";
 
 interface FormValues {
   name: string;
@@ -17,12 +18,25 @@ interface UseRegisterReturn<T extends FormValues> {
 
 export const useRegister = <T extends FormValues>(): UseRegisterReturn<T> => {
   const [response, setResponse] = useState<any>(undefined);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
   const [formError, setFormError] = useState<FormValues | null>(null);
   const [serverError, setServerError] = useState<string | null>(null);
 
+  const { data, isLoading, error, send } = useFetch({ endpoint: `/register` });
+
+  useEffect(() => {
+    if (data) {
+      setResponse(data);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (error) {
+      error.message && setServerError(error.message);
+      setFormError(error.error);
+    }
+  }, [error]);
+
   const register = async (formData: T) => {
-    setIsLoading(true);
     setServerError(null);
     setFormError(null);
 
@@ -50,30 +64,31 @@ export const useRegister = <T extends FormValues>(): UseRegisterReturn<T> => {
 
     if (!formData.password) {
       errors.password = "Password is required";
+    } else {
+      if (formData.password.length < 8) {
+        errors.password = "Password must be at least 8 characters long";
+      }
+      if (!/[A-Z]+/.test(formData.password)) {
+        errors.password = "Password must contain at least one uppercase letter";
+      }
+      if (!/[a-z]+/.test(formData.password)) {
+        errors.password = "Password must contain at least one lowercase letter";
+      }
+      if (!/\d+/.test(formData.password)) {
+        errors.password = "Password must contain at least one digit";
+      }
+      if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]+/.test(formData.password)) {
+        errors.password =
+          "Password must contain at least one special character";
+      }
     }
 
     if (Object.values(errors).some((error) => error !== "")) {
       setFormError(errors);
-      setIsLoading(false);
       return;
     }
 
-    try {
-      const result = await fetch("http://localhost:8080/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      const data = await result.json();
-      setResponse(data);
-    } catch (error) {
-      setServerError("Server error occurred");
-    }
-
-    setIsLoading(false);
+    await send(formData, "POST");
   };
 
   return {

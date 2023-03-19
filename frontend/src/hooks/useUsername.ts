@@ -1,29 +1,45 @@
 import useFetch from "./useFetch";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
-interface PropsShape {
-  username: string;
-}
 interface ReturnShape {
   isAvailable: boolean | null;
 }
+interface FormValues {
+  name: string;
+  username: string;
+  email: string;
+  password: string;
+}
 
-const useUsername = ({ username }: PropsShape) => {
+const useUsername = (username: string) => {
+  const [formError, setFormError] = useState<FormValues | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null);
+
   const { isLoading, error, data, send } = useFetch<ReturnShape>({
-    url: `http://localhost:8080/check-username?username=${username}`,
+    endpoint: `/check-username?username=${username}`,
   });
 
   useEffect(() => {
-    send();
+    if (error) {
+      error.message && setServerError(error.message);
+      setFormError(error.error);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (username !== "") {
+      send();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [username]);
 
+  const isAvailable = username.length > 1 ? data?.isAvailable : null;
+
   return {
-    username: {
-      isAvailable: username.length > 1 ? data?.isAvailable : null,
-      isLoading,
-      error,
-    },
+    isAvailable,
+    isLoading,
+    formError,
+    serverError,
   };
 };
 

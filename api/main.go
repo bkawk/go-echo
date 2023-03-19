@@ -25,6 +25,9 @@ func main() {
 		panic(err)
 	}
 
+	// Middleware logger
+	e.Use(middleware.Logger())
+
 	// Connect to MongoDB Atlas
 	client, err := database.Connect()
 	if err != nil {

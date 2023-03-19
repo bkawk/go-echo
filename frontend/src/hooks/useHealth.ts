@@ -10,7 +10,7 @@ interface ReturnShape {
 
 const useHealth = ({ awaitClick = false }: PropsShape = {}) => {
   const { isLoading, error, data, send } = useFetch<ReturnShape>({
-    url: "http://localhost:8080/health",
+    endpoint: "/health",
   });
 
   const result = data?.status;

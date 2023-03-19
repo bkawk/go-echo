@@ -6,7 +6,8 @@ interface Props {}
 const UsernameInput: React.FC<Props> = () => {
   const [usernameVal, setUsernameVal] = useState("");
 
-  const { username } = useUsername({ username: usernameVal });
+  const { isAvailable, isLoading, formError, serverError } =
+    useUsername(usernameVal);
 
   return (
     <div>
@@ -20,13 +21,12 @@ const UsernameInput: React.FC<Props> = () => {
         }}
       />
       <small>
-        {username.isAvailable !== null &&
-          (username.isAvailable ? (
-            <div>Available</div>
-          ) : (
-            <div>Not Available</div>
-          ))}
+        {isAvailable !== null &&
+          (isAvailable ? <div>Available</div> : <div>Not Available</div>)}
       </small>
+      {isLoading && <div>Loading...</div>}
+      {formError?.username && <p>{formError?.username}</p>}
+      {serverError && <p>Server error: {serverError}</p>}
     </div>
   );
 };

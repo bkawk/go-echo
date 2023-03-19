@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import useRegister from "../hooks/useRegister";
+import useUsername from "../hooks/useUsername";
 
 interface FormValues {
   name: string;
@@ -21,6 +22,8 @@ const DoRegister: React.FC<Props> = () => {
   const { response, isLoading, formError, serverError, register } =
     useRegister();
 
+  const { isAvailable } = useUsername(formData.username);
+
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = event.target;
     setFormData((prevState) => ({ ...prevState, [name]: value }));
@@ -34,18 +37,11 @@ const DoRegister: React.FC<Props> = () => {
   return (
     <div>
       <h1>Register</h1>
-
+      <p>{JSON.stringify(isLoading)}</p>
       <form onSubmit={handleSubmit}>
-        <input type="hidden" name="Content-Type" value="application/json" />
-
         <label htmlFor="name">Name:</label>
-        <input
-          type="text"
-          id="name"
-          name="name"
-          required
-          onChange={handleInputChange}
-        />
+        <input type="text" id="name" name="name" onChange={handleInputChange} />
+        {formError?.name && <p>{formError?.name}</p>}
         <br />
 
         <label htmlFor="username">Username:</label>
@@ -53,9 +49,13 @@ const DoRegister: React.FC<Props> = () => {
           type="text"
           id="username"
           name="username"
-          required
           onChange={handleInputChange}
         />
+        <small>
+          {isAvailable !== null &&
+            (isAvailable ? <div>Available</div> : <div>Not Available</div>)}
+        </small>
+        {formError?.username && <p>{formError?.username}</p>}
         <br />
 
         <label htmlFor="email">Email:</label>
@@ -63,9 +63,9 @@ const DoRegister: React.FC<Props> = () => {
           type="email"
           id="email"
           name="email"
-          required
           onChange={handleInputChange}
         />
+        {formError?.email && <p>{formError?.email}</p>}
         <br />
 
         <label htmlFor="password">Password:</label>
@@ -73,16 +73,13 @@ const DoRegister: React.FC<Props> = () => {
           type="password"
           id="password"
           name="password"
-          required
           onChange={handleInputChange}
         />
+        {formError?.password && <p>{formError?.password}</p>}
         <br />
 
-        {formError?.password && <p>Form error: {formError?.password}</p>}
-        {formError?.email && <p>Form error: {formError?.email}</p>}
-        {formError?.username && <p>Form error: {formError?.username}</p>}
-        {formError?.name && <p>Form error: {formError?.name}</p>}
         {serverError && <p>Server error: {serverError}</p>}
+        {response && <p>Registration successful!</p>}
 
         <input type="submit" value="Register" />
       </form>
