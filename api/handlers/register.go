@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"bkawk/go-echo/api/customMiddleware"
 	"bkawk/go-echo/api/emails"
 	"bkawk/go-echo/api/utils"
 	"context"
@@ -25,25 +26,13 @@ type UserStr struct {
 	CreatedAt        int64  `json:"createdAt,omitempty"`
 }
 
-type ErrorResponse struct {
-	Name     string `json:"name,omitempty"`
-	Email    string `json:"email,omitempty"`
-	Username string `json:"username,omitempty"`
-	Password string `json:"password,omitempty"`
-}
-
-type Response struct {
-	Message string         `json:"message"`
-	Error   *ErrorResponse `json:"error,omitempty"`
-}
-
 // RegisterEndpoint handles user registration requests
 func RegisterPost(c echo.Context) error {
 
 	// Validate input
 	u := new(UserStr)
 	if err := c.Bind(u); err != nil {
-		return err
+		return c.JSON(http.StatusBadRequest, customMiddleware.Response{Message: "Invalid request data"})
 	}
 
 	// Validate strong password
@@ -51,10 +40,12 @@ func RegisterPost(c echo.Context) error {
 		// Type assert the error to utils.PasswordError
 		passwordError := err.(*utils.PasswordError)
 
-		return c.JSON(http.StatusBadRequest, Response{
+		return c.JSON(http.StatusBadRequest, customMiddleware.Response{
 			Message: "password not strong enough",
-			Error: &ErrorResponse{
-				Password: passwordError.Password,
+			Error: &customMiddleware.ErrorResponse{
+				Errors: map[string]string{
+					"password": passwordError.Password,
+				},
 			},
 		})
 	}
@@ -74,25 +65,30 @@ func RegisterPost(c echo.Context) error {
 		},
 	}).Decode(&existingUser)
 
+	if err != nil && err != mongo.ErrNoDocuments {
+		c.Logger().Errorf("Error querying database: %v", err)
+		return c.JSON(http.StatusInternalServerError, customMiddleware.Response{Message: "An error occurred while processing your request"})
+	}
+
 	if err == nil {
 		// Prepare the error response
-		errorResponse := &ErrorResponse{}
+		errorResponse := &customMiddleware.ErrorResponse{}
 
 		if existingUser.Username == u.Username {
-			errorResponse.Username = "Username already exists"
+			errorResponse.Errors["username"] = "Username already exists"
 		}
 		if existingUser.Email == u.Email {
-			errorResponse.Email = "Email already exists"
+			errorResponse.Errors["email"] = "Email already exists"
 		}
 
-		return c.JSON(http.StatusBadRequest, Response{Message: "Username or Email already exists", Error: errorResponse})
+		return c.JSON(http.StatusBadRequest, customMiddleware.Response{Message: "Username or Email already exists", Error: errorResponse})
 	}
 
 	// Hash the password
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
 	if err != nil {
 		c.Logger().Errorf("Error hashing password: %v", err)
-		return c.JSON(http.StatusInternalServerError, Response{Message: "An error occurred while processing your request"})
+		return c.JSON(http.StatusInternalServerError, customMiddleware.Response{Message: "An error occurred while processing your request"})
 	}
 	u.Password = string(hashedPassword)
 
@@ -100,7 +96,7 @@ func RegisterPost(c echo.Context) error {
 	uuid, err := utils.GenerateUUID()
 	if err != nil {
 		c.Logger().Errorf("Error generating user ID: %v", err)
-		return c.JSON(http.StatusInternalServerError, Response{Message: "An error occurred while processing your request"})
+		return c.JSON(http.StatusInternalServerError, customMiddleware.Response{Message: "An error occurred while processing your request"})
 	}
 	u.ID = "usr_" + uuid
 	u.IsVerified = false
@@ -109,7 +105,7 @@ func RegisterPost(c echo.Context) error {
 	vCode, err := utils.GenerateUUID()
 	if err != nil {
 		c.Logger().Errorf("Error generating verification code: %v", err)
-		return c.JSON(http.StatusInternalServerError, Response{Message: "An error occurred while processing your request"})
+		return c.JSON(http.StatusInternalServerError, customMiddleware.Response{Message: "An error occurred while processing your request"})
 	}
 	u.VerificationCode = "ver_" + vCode
 
@@ -120,23 +116,22 @@ func RegisterPost(c echo.Context) error {
 	_, err = collection.InsertOne(ctx, u)
 	if err != nil {
 		c.Logger().Errorf("Error saving user: %v", err)
-		return c.JSON(http.StatusInternalServerError, Response{Message: "An error occurred while processing your request"})
+		return c.JSON(http.StatusInternalServerError, customMiddleware.Response{Message: "An error occurred while processing your request"})
 	}
 
 	// Get the verification URL from the environment
-	verifyUrl := os.Getenv("VERIFY_URL")
-	if verifyUrl == "" {
+	verifyUrl, exists := os.LookupEnv("VERIFY_URL")
+	if !exists {
 		c.Logger().Errorf("environment variable not set: VERIFY_URL")
-		return c.JSON(http.StatusInternalServerError, Response{Message: "An error occurred while processing your request"})
-
+		return c.JSON(http.StatusInternalServerError, customMiddleware.Response{Message: "An error occurred while processing your request"})
 	}
 
 	// Send welcome email
 	emailError := emails.SendWelcomeEmail(u.Email, verifyUrl+"?verificationCode="+u.VerificationCode)
 	if emailError != nil {
 		c.Logger().Errorf("Error sending welcome email: %v", emailError)
-		return c.JSON(http.StatusInternalServerError, Response{Message: "An error occurred while processing your request"})
+		return c.JSON(http.StatusInternalServerError, customMiddleware.Response{Message: "An error occurred while processing your request"})
 	}
 
-	return c.JSON(http.StatusOK, Response{Message: "Your account has been successfully created"})
+	return c.JSON(http.StatusOK, customMiddleware.Response{Message: "Your account has been successfully created"})
 }

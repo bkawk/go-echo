@@ -15,6 +15,12 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type LoginStr struct {
+	Username string `json:"username" validate:"required,min=4,max=32"`
+	Email    string `json:"email" validate:"required,email"`
+	Password string `json:"password" validate:"required,min=8,max=64"`
+}
+
 // RegisterEndpoint handles user registration requests
 func LoginPost(c echo.Context) error {
 
@@ -24,7 +30,7 @@ func LoginPost(c echo.Context) error {
 	defer cancel()
 
 	// Validate input
-	u := new(models.User)
+	u := new(LoginStr)
 	if err := c.Bind(u); err != nil {
 		return c.JSON(http.StatusInternalServerError, echo.Map{"error": "Failed to bind request body"})
 	}

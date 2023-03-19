@@ -56,6 +56,7 @@ func main() {
 	})
 
 	e.Use(customMiddleware.Fingerprint)
+	e.Use(customMiddleware.ErrorHandler)
 
 	// Configure CORS middleware
 	config := middleware.CORSConfig{
